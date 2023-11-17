@@ -1,13 +1,13 @@
-package com.pk.ztplab2dawidkwapisz;
+package com.pk.lab2;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
 
 @SpringBootApplication
-public class ZtpLab2DawidKwapiszApplication {
+public class RunLab2Application {
 
 	public static void main(String[] args) {
-		SpringApplication.run(ZtpLab2DawidKwapiszApplication.class, args);
+		SpringApplication.run(RunLab2Application.class, args);
 	}
 
 }

@@ -1,10 +1,10 @@
-package com.pk.ztplab2dawidkwapisz;
+package com.pk.lab2;
 
 import org.junit.jupiter.api.Test;
 import org.springframework.boot.test.context.SpringBootTest;
 
 @SpringBootTest
-class ZtpLab2DawidKwapiszApplicationTests {
+class RunLab2ApplicationTests {
 
 	@Test
 	void contextLoads() {
