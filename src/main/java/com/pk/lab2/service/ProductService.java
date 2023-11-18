@@ -2,9 +2,9 @@ package com.pk.lab2.service;
 
 import com.pk.lab2.model.Product;
 import com.pk.lab2.model.ProductDTO;
+import com.pk.lab2.model.ProductHistory;
+import com.pk.lab2.model.ProductSummaryDTO;
 import com.pk.lab2.repository.ProductRepository;
-import org.springframework.http.HttpStatus;
-import org.springframework.http.ResponseEntity;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -18,69 +18,111 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
+    // TODO Data Validation
     public ProductService(ProductRepository productRepository) {
         this.productRepository = productRepository;
     }
 
-    public ResponseEntity<List<Product>> getAllProducts() {
-        // TODO Need to change - return only the most important details about products when calling getAll
-        return ResponseEntity.status(HttpStatus.OK).body(productRepository.findAll());
+    public List<ProductSummaryDTO> getAllProducts() {
+        return productRepository.findAllProductSummaries();
     }
 
-    public ResponseEntity<?> getProductById(String productId) {
-        Optional<Product> product = productRepository.findById(productId);
+    public Product getProductById(String productId) {
+        Optional<Product> productOptional = productRepository.findById(productId);
 
-        if (product.isPresent()) {
-            return ResponseEntity.status(HttpStatus.OK).body(product.get());
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cannot found product with given ID: " + productId);
-        }
+        return productOptional.orElse(null);
     }
 
     @Transactional
-    public ResponseEntity<Product> createProduct(ProductDTO productDTO) {
+    public Product createProduct(ProductDTO productDTO) {
         Product product = Product.builder()
                 .name(productDTO.getName())
                 .description(productDTO.getDescription())
                 .quantity(productDTO.getQuantity())
                 .price(productDTO.getPrice())
                 .weight(productDTO.getWeight())
-                .available(productDTO.isAvailable())
+                .available(productDTO.getAvailable())
                 .productCategory(productDTO.getProductCategory())
                 .dateAdded(LocalDateTime.now())
                 .dateLastUpdate(LocalDateTime.now())
                 .productHistory(Collections.emptyList())
                 .build();
 
-        productRepository.save(product);
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(product);
+        return productRepository.save(product);
     }
 
     @Transactional
-    public ResponseEntity<?> updateProduct(String productId, ProductDTO productDTO) {
+    public Product updateProduct(String productId, ProductDTO productDTO) {
         Optional<Product> productOptional = productRepository.findById(productId);
+        // TODO Fix -> data duplication, only one time update works
+        return productOptional.map(existingProduct -> {
+            if (updateProductWithHistory(productDTO, existingProduct)) {
+                existingProduct.setDateLastUpdate(LocalDateTime.now());
+                return productRepository.save(existingProduct);
+            }
+            return null;
+        }).orElse(null);
+    }
 
-        // TODO Whole logic for updating + history saving
+    private boolean updateProductWithHistory(ProductDTO productDTO, Product existingProduct) {
+        boolean updated = false;
 
-        if (productOptional.isPresent()) {
-            Product product = productOptional.get();
-            productRepository.save(product);
-            return ResponseEntity.status(HttpStatus.OK).body(product);
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cannot found product with given ID: " + productId);
+        ProductHistory productHistory = new ProductHistory();
+
+        if (productDTO.getName() != null) {
+            existingProduct.setName(productDTO.getName());
+            existingProduct.getProductHistory().add(productHistory.withHistoryEntry("name",
+                    existingProduct.getName(), productDTO.getName()));
+            updated = true;
         }
+        if (productDTO.getDescription() != null) {
+            existingProduct.setDescription(productDTO.getDescription());
+            existingProduct.getProductHistory().add(productHistory.withHistoryEntry("description",
+                    existingProduct.getDescription(), productDTO.getDescription()));
+            updated = true;
+        }
+        if (productDTO.getQuantity() != null) {
+            existingProduct.setQuantity(productDTO.getQuantity());
+            existingProduct.getProductHistory().add(productHistory.withHistoryEntry("quantity",
+                    existingProduct.getQuantity(), productDTO.getQuantity()));
+            updated = true;
+        }
+        if (productDTO.getPrice() != null) {
+            existingProduct.setPrice(productDTO.getPrice());
+            existingProduct.getProductHistory().add(productHistory.withHistoryEntry("price",
+                            existingProduct.getPrice(), productDTO.getPrice()));
+            updated = true;
+        }
+        if (productDTO.getWeight() != null) {
+            existingProduct.setWeight(productDTO.getWeight());
+            existingProduct.getProductHistory().add(productHistory.withHistoryEntry("weight",
+                    existingProduct.getWeight(), productDTO.getWeight()));
+            updated = true;
+        }
+        if (productDTO.getAvailable() != null) {
+            existingProduct.setAvailable(productDTO.getAvailable());
+            existingProduct.getProductHistory().add(productHistory.withHistoryEntry("availability",
+                    existingProduct.getAvailable(), productDTO.getAvailable()));
+            updated = true;
+        }
+        if (productDTO.getProductCategory() != null) {
+            existingProduct.setProductCategory(productDTO.getProductCategory());
+            existingProduct.getProductHistory().add(productHistory.withHistoryEntry("productCategory",
+                    existingProduct.getProductCategory(), productDTO.getProductCategory()));
+            updated = true;
+        }
+
+        return updated;
     }
 
     @Transactional
-    public ResponseEntity<?> deleteProduct(String productId) {
-        boolean productExists = productRepository.existsById(productId);
-
-        if (productExists) {
-            productRepository.deleteById(productId);
-            return ResponseEntity.status(HttpStatus.NO_CONTENT).body("Product with ID: " + productId + " has been removed");
-        } else {
-            return ResponseEntity.status(HttpStatus.NOT_FOUND).body("Cannot found product with given ID: " + productId);
-        }
+    public boolean deleteProduct(String productId) {
+        return productRepository.findById(productId)
+                .map(product -> {
+                    productRepository.deleteById(productId);
+                    return true;
+                })
+                .orElse(false);
     }
+
 }

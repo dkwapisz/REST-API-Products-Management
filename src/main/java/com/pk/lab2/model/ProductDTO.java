@@ -8,10 +8,10 @@ public class ProductDTO {
 
     private String name;
     private String description;
-    private int quantity;
-    private float price;
-    private float weight;
-    private boolean available;
+    private Integer quantity;
+    private Float price;
+    private Float weight;
+    private Boolean available;
     private ProductCategory productCategory;
 
 }
