@@ -8,6 +8,7 @@ import org.springframework.boot.CommandLineRunner;
 import org.springframework.stereotype.Component;
 
 import java.time.LocalDateTime;
+import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.Collections;
 import java.util.List;
@@ -35,7 +36,7 @@ public class ProductDataSeeder implements CommandLineRunner {
                 .productCategory(ProductCategory.ELECTRONICS)
                 .dateAdded(LocalDateTime.now())
                 .dateLastUpdate(LocalDateTime.now())
-                .productHistory(Collections.emptyList())
+                .productHistory(new ArrayList<>())
                 .build();
 
         Product product2 = Product.builder()
@@ -49,7 +50,7 @@ public class ProductDataSeeder implements CommandLineRunner {
                 .productCategory(ProductCategory.TOYS)
                 .dateAdded(LocalDateTime.now())
                 .dateLastUpdate(LocalDateTime.now())
-                .productHistory(Collections.emptyList())
+                .productHistory(new ArrayList<>())
                 .build();
 
         Product product3 = Product.builder()
@@ -62,7 +63,7 @@ public class ProductDataSeeder implements CommandLineRunner {
                 .productCategory(ProductCategory.INDUSTRIAL)
                 .dateAdded(LocalDateTime.now())
                 .dateLastUpdate(LocalDateTime.now())
-                .productHistory(Collections.emptyList())
+                .productHistory(new ArrayList<>())
                 .build();
 
         Product product4 = Product.builder()
@@ -75,7 +76,7 @@ public class ProductDataSeeder implements CommandLineRunner {
                 .productCategory(ProductCategory.GARDEN)
                 .dateAdded(LocalDateTime.now())
                 .dateLastUpdate(LocalDateTime.now())
-                .productHistory(Collections.emptyList())
+                .productHistory(new ArrayList<>())
                 .build();
 
         Product product5 = Product.builder()
@@ -88,7 +89,7 @@ public class ProductDataSeeder implements CommandLineRunner {
                 .productCategory(ProductCategory.COLLECTIBLES)
                 .dateAdded(LocalDateTime.now())
                 .dateLastUpdate(LocalDateTime.now())
-                .productHistory(Collections.emptyList())
+                .productHistory(new ArrayList<>())
                 .build();
 
         List<Product> products = Arrays.asList(product1, product2, product3, product4, product5);

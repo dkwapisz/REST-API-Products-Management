@@ -2,16 +2,18 @@ package com.pk.lab2.service;
 
 import com.pk.lab2.model.Product;
 import com.pk.lab2.model.ProductDTO;
-import com.pk.lab2.model.ProductHistory;
 import com.pk.lab2.model.ProductSummaryDTO;
 import com.pk.lab2.repository.ProductRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.LocalDateTime;
-import java.util.Collections;
+import java.util.ArrayList;
 import java.util.List;
+import java.util.Objects;
 import java.util.Optional;
+import java.util.function.Consumer;
+import java.util.function.Supplier;
 
 @Service
 public class ProductService {
@@ -45,7 +47,7 @@ public class ProductService {
                 .productCategory(productDTO.getProductCategory())
                 .dateAdded(LocalDateTime.now())
                 .dateLastUpdate(LocalDateTime.now())
-                .productHistory(Collections.emptyList())
+                .productHistory(new ArrayList<>())
                 .build();
 
         return productRepository.save(product);
@@ -54,7 +56,6 @@ public class ProductService {
     @Transactional
     public Product updateProduct(String productId, ProductDTO productDTO) {
         Optional<Product> productOptional = productRepository.findById(productId);
-        // TODO Fix -> data duplication, only one time update works
         return productOptional.map(existingProduct -> {
             if (updateProductWithHistory(productDTO, existingProduct)) {
                 existingProduct.setDateLastUpdate(LocalDateTime.now());
@@ -67,49 +68,25 @@ public class ProductService {
     private boolean updateProductWithHistory(ProductDTO productDTO, Product existingProduct) {
         boolean updated = false;
 
-        ProductHistory productHistory = new ProductHistory();
+        Product.ProductHistory productHistory = new Product.ProductHistory();
 
-        if (productDTO.getName() != null) {
-            existingProduct.setName(productDTO.getName());
-            existingProduct.getProductHistory().add(productHistory.withHistoryEntry("name",
-                    existingProduct.getName(), productDTO.getName()));
-            updated = true;
-        }
-        if (productDTO.getDescription() != null) {
-            existingProduct.setDescription(productDTO.getDescription());
-            existingProduct.getProductHistory().add(productHistory.withHistoryEntry("description",
-                    existingProduct.getDescription(), productDTO.getDescription()));
-            updated = true;
-        }
-        if (productDTO.getQuantity() != null) {
-            existingProduct.setQuantity(productDTO.getQuantity());
-            existingProduct.getProductHistory().add(productHistory.withHistoryEntry("quantity",
-                    existingProduct.getQuantity(), productDTO.getQuantity()));
-            updated = true;
-        }
-        if (productDTO.getPrice() != null) {
-            existingProduct.setPrice(productDTO.getPrice());
-            existingProduct.getProductHistory().add(productHistory.withHistoryEntry("price",
-                            existingProduct.getPrice(), productDTO.getPrice()));
-            updated = true;
-        }
-        if (productDTO.getWeight() != null) {
-            existingProduct.setWeight(productDTO.getWeight());
-            existingProduct.getProductHistory().add(productHistory.withHistoryEntry("weight",
-                    existingProduct.getWeight(), productDTO.getWeight()));
-            updated = true;
-        }
-        if (productDTO.getAvailable() != null) {
-            existingProduct.setAvailable(productDTO.getAvailable());
-            existingProduct.getProductHistory().add(productHistory.withHistoryEntry("availability",
-                    existingProduct.getAvailable(), productDTO.getAvailable()));
-            updated = true;
-        }
-        if (productDTO.getProductCategory() != null) {
-            existingProduct.setProductCategory(productDTO.getProductCategory());
-            existingProduct.getProductHistory().add(productHistory.withHistoryEntry("productCategory",
-                    existingProduct.getProductCategory(), productDTO.getProductCategory()));
-            updated = true;
+        updated |= updateField("name", productDTO::getName, existingProduct::getName,
+                existingProduct::setName, productHistory);
+        updated |= updateField("description", productDTO::getDescription, existingProduct::getDescription,
+                existingProduct::setDescription, productHistory);
+        updated |= updateField("quantity", productDTO::getQuantity, existingProduct::getQuantity,
+                existingProduct::setQuantity, productHistory);
+        updated |= updateField("price", productDTO::getPrice, existingProduct::getPrice,
+                existingProduct::setPrice, productHistory);
+        updated |= updateField("weight", productDTO::getWeight, existingProduct::getWeight,
+                existingProduct::setWeight, productHistory);
+        updated |= updateField("availability", productDTO::getAvailable, existingProduct::getAvailable,
+                existingProduct::setAvailable, productHistory);
+        updated |= updateField("productCategory", productDTO::getProductCategory,
+                existingProduct::getProductCategory, existingProduct::setProductCategory, productHistory);
+
+        if (!productHistory.getChangedFieldsMap().isEmpty()) {
+            existingProduct.getProductHistory().add(productHistory);
         }
 
         return updated;
@@ -125,4 +102,19 @@ public class ProductService {
                 .orElse(false);
     }
 
+    private <T> boolean updateField(String fieldName, Supplier<T> supplierNewValue, Supplier<T> supplierCurrentValue,
+                                    Consumer<T> setter, Product.ProductHistory productHistory) {
+        T newValue = supplierNewValue.get();
+
+        if (newValue != null) {
+            T currentValue = supplierCurrentValue.get();
+            if (!Objects.equals(currentValue, newValue)) {
+                setter.accept(newValue);
+                productHistory.addHistoryEntry(fieldName, currentValue, newValue);
+                return true;
+            }
+        }
+
+        return false;
+    }
 }
