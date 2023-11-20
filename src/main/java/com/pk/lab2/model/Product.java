@@ -6,7 +6,6 @@ import lombok.Builder;
 import lombok.Data;
 import lombok.experimental.Accessors;
 import org.springframework.data.mongodb.core.mapping.Document;
-import org.springframework.data.util.Pair;
 
 import java.time.LocalDateTime;
 import java.util.HashMap;

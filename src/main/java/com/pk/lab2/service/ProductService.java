@@ -20,7 +20,6 @@ public class ProductService {
 
     private final ProductRepository productRepository;
 
-    // TODO Data Validation
     public ProductService(ProductRepository productRepository) {
         this.productRepository = productRepository;
     }
@@ -61,7 +60,7 @@ public class ProductService {
                 existingProduct.setDateLastUpdate(LocalDateTime.now());
                 return productRepository.save(existingProduct);
             }
-            return null;
+            return productOptional.get();
         }).orElse(null);
     }
 

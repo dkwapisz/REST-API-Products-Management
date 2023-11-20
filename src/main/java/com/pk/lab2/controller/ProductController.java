@@ -9,6 +9,8 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.Collections;
 
+import static com.pk.lab2.validation.ProductValidation.isProductValidForCreate;
+import static com.pk.lab2.validation.ProductValidation.isProductValidForUpdate;
 import static java.util.Objects.nonNull;
 
 @RestController
@@ -47,15 +49,23 @@ public class ProductController {
     @PostMapping
     public ResponseEntity<?> createProduct(@RequestBody ProductDTO productDTO) {
         try {
+            if (!isProductValidForCreate(productDTO)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.emptyMap());
+            }
+
             return ResponseEntity.status(HttpStatus.CREATED).body(productService.createProduct(productDTO));
         } catch (Exception e) {
             return ResponseEntity.status(HttpStatus.INTERNAL_SERVER_ERROR).body(e.getMessage());
         }
     }
 
-    @PutMapping("/{productId}")
+    @PatchMapping("/{productId}")
     public ResponseEntity<?> updateProduct(@PathVariable String productId, @RequestBody ProductDTO productDTO) {
         try {
+            if (!isProductValidForUpdate(productDTO)) {
+                return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(Collections.emptyMap());
+            }
+
             Product product = productService.updateProduct(productId, productDTO);
             if (nonNull(product)) {
                 return ResponseEntity.status(HttpStatus.OK).body(product);
