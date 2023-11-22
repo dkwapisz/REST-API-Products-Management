@@ -15,7 +15,6 @@ public class ProductValidation {
                 isIntegerValidCreate(productDTO.getQuantity()) &&
                 isFloatValidCreate(productDTO.getPrice()) &&
                 isFloatValidCreate(productDTO.getWeight()) &&
-                nonNull(productDTO.getAvailable()) &&
                 nonNull(productDTO.getProductCategory());
     }
 
@@ -57,9 +56,6 @@ public class ProductValidation {
                 } else {
                     return false;
                 }
-            }
-            if (nonNull(productDTO.getAvailable())) {
-                valid = true;
             }
             if (nonNull(productDTO.getProductCategory())) {
                 valid = true;

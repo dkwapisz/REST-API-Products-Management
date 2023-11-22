@@ -42,7 +42,7 @@ public class ProductService {
                 .quantity(productDTO.getQuantity())
                 .price(productDTO.getPrice())
                 .weight(productDTO.getWeight())
-                .available(productDTO.getAvailable())
+                .available(productDTO.getQuantity() > 0)
                 .productCategory(productDTO.getProductCategory())
                 .dateAdded(LocalDateTime.now())
                 .dateLastUpdate(LocalDateTime.now())
@@ -53,10 +53,10 @@ public class ProductService {
     }
 
     @Transactional
-    public Product updateProduct(String productId, ProductDTO productDTO) {
+    public Product updateProduct(String productId, ProductDTO updatedProductDTO) {
         Optional<Product> productOptional = productRepository.findById(productId);
         return productOptional.map(existingProduct -> {
-            if (updateProductWithHistory(productDTO, existingProduct)) {
+            if (updateProductWithHistory(updatedProductDTO, existingProduct)) {
                 existingProduct.setDateLastUpdate(LocalDateTime.now());
                 return productRepository.save(existingProduct);
             }
@@ -64,24 +64,24 @@ public class ProductService {
         }).orElse(null);
     }
 
-    private boolean updateProductWithHistory(ProductDTO productDTO, Product existingProduct) {
+    private boolean updateProductWithHistory(ProductDTO updatedProductDTO, Product existingProduct) {
         boolean updated = false;
 
         Product.ProductHistory productHistory = new Product.ProductHistory();
 
-        updated |= updateField("name", productDTO::getName, existingProduct::getName,
+        updated |= updateAvailabilityIfNeeded(updatedProductDTO, existingProduct, productHistory);
+
+        updated |= updateField("name", updatedProductDTO::getName, existingProduct::getName,
                 existingProduct::setName, productHistory);
-        updated |= updateField("description", productDTO::getDescription, existingProduct::getDescription,
+        updated |= updateField("description", updatedProductDTO::getDescription, existingProduct::getDescription,
                 existingProduct::setDescription, productHistory);
-        updated |= updateField("quantity", productDTO::getQuantity, existingProduct::getQuantity,
+        updated |= updateField("quantity", updatedProductDTO::getQuantity, existingProduct::getQuantity,
                 existingProduct::setQuantity, productHistory);
-        updated |= updateField("price", productDTO::getPrice, existingProduct::getPrice,
+        updated |= updateField("price", updatedProductDTO::getPrice, existingProduct::getPrice,
                 existingProduct::setPrice, productHistory);
-        updated |= updateField("weight", productDTO::getWeight, existingProduct::getWeight,
+        updated |= updateField("weight", updatedProductDTO::getWeight, existingProduct::getWeight,
                 existingProduct::setWeight, productHistory);
-        updated |= updateField("availability", productDTO::getAvailable, existingProduct::getAvailable,
-                existingProduct::setAvailable, productHistory);
-        updated |= updateField("productCategory", productDTO::getProductCategory,
+        updated |= updateField("productCategory", updatedProductDTO::getProductCategory,
                 existingProduct::getProductCategory, existingProduct::setProductCategory, productHistory);
 
         if (!productHistory.getChangedFieldsMap().isEmpty()) {
@@ -115,5 +115,19 @@ public class ProductService {
         }
 
         return false;
+    }
+
+    private boolean updateAvailabilityIfNeeded(ProductDTO updatedProductDTO, Product existingProduct,
+                                               Product.ProductHistory productHistory) {
+        boolean updated = false;
+
+        if (existingProduct.getQuantity() > 0 && updatedProductDTO.getQuantity() == 0) {
+            updated |= updateField("availability", (() -> Boolean.FALSE), existingProduct::getAvailable,
+                    existingProduct::setAvailable, productHistory);
+        } else if (existingProduct.getQuantity() == 0 && updatedProductDTO.getQuantity() > 0) {
+            updated |= updateField("availability", (() -> Boolean.TRUE), existingProduct::getAvailable,
+                    existingProduct::setAvailable, productHistory);
+        }
+        return updated;
     }
 }

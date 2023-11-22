@@ -47,7 +47,6 @@ public class Product {
             }
 
             this.changedFieldsMap.put(objectType, UpdatePair.of(objectBeforeUpdate, objectAfterUpdate));
-
         }
     }
 }
