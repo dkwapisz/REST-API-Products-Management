@@ -15,6 +15,8 @@ import java.util.Optional;
 import java.util.function.Consumer;
 import java.util.function.Supplier;
 
+import static java.util.Objects.isNull;
+
 @Service
 public class ProductService {
 
@@ -120,6 +122,10 @@ public class ProductService {
     private boolean updateAvailabilityIfNeeded(ProductDTO updatedProductDTO, Product existingProduct,
                                                Product.ProductHistory productHistory) {
         boolean updated = false;
+
+        if (isNull(updatedProductDTO.getQuantity())) {
+            return false;
+        }
 
         if (existingProduct.getQuantity() > 0 && updatedProductDTO.getQuantity() == 0) {
             updated |= updateField("availability", (() -> Boolean.FALSE), existingProduct::getAvailable,
