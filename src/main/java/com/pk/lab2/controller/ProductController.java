@@ -14,7 +14,7 @@ import static com.pk.lab2.validation.ProductValidation.isProductValidForUpdate;
 import static java.util.Objects.nonNull;
 
 @RestController
-@RequestMapping(("/products"))
+@RequestMapping(("/api/products"))
 public class ProductController {
 
     private final ProductService productService;
